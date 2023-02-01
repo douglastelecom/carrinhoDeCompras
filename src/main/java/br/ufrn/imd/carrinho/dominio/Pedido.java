@@ -1,5 +1,6 @@
 package br.ufrn.imd.carrinho.dominio;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -12,24 +13,24 @@ public class Pedido {
 	/**
 	 * Preço total do pedido, incluindo pedido cobrado pelos itens e pelo frete
 	 */
-	private Double precoTotal;
+	private BigDecimal precoTotal;
 
 	/**
 	 * Preço cobrado apenas pelos itens
 	 */
-	private Double precoItens;
+	private BigDecimal precoItens;
 
 	/**
 	 * Preço cobrado pelo serviço de frete
 	 */
-	private Double precoFrete;
+	private BigDecimal precoFrete;
 
 	/**
 	 * Data em que foi realizado o pedido
 	 */
 	private LocalDate dataPedido;
 
-	public Pedido(Usuario usuario, List<Item> itens, Double precoTotal, Double precoItens, Double precoFrete,
+	public Pedido(Usuario usuario, List<Item> itens, BigDecimal precoTotal, BigDecimal precoItens, BigDecimal precoFrete,
 			LocalDate dataPedido) {
 		super();
 		this.usuario = usuario;
@@ -56,27 +57,27 @@ public class Pedido {
 		this.itens = itens;
 	}
 
-	public Double getPrecoTotal() {
+	public BigDecimal getPrecoTotal() {
 		return precoTotal;
 	}
 
-	public void setPrecoTotal(Double precoTotal) {
+	public void setPrecoTotal(BigDecimal precoTotal) {
 		this.precoTotal = precoTotal;
 	}
 
-	public Double getPrecoItens() {
+	public BigDecimal getPrecoItens() {
 		return precoItens;
 	}
 
-	public void setPrecoItens(Double precoItens) {
+	public void setPrecoItens(BigDecimal precoItens) {
 		this.precoItens = precoItens;
 	}
 
-	public Double getPrecoFrete() {
+	public BigDecimal getPrecoFrete() {
 		return precoFrete;
 	}
 
-	public void setPrecoFrete(Double precoFrete) {
+	public void setPrecoFrete(BigDecimal precoFrete) {
 		this.precoFrete = precoFrete;
 	}
 
