@@ -1,6 +1,7 @@
 package br.ufrn.imd.carrinho.servico;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +15,7 @@ public class CarrinhoServico {
 
         BigDecimal somaPrecoItens = somarPreco(itens);
         BigDecimal taxaDesconto = encontrarDesconto(somaPrecoItens, itens);
-        BigDecimal precoItensFinal = calcularPrecoItensFinal(somaPrecoItens, taxaDesconto);
+        BigDecimal precoItensFinal = calcularPrecoItensFinal(somaPrecoItens, taxaDesconto, itens);
 
         Regiao regiao = encontrarRegiao(usuario.getEndereco().getEstado());
         BigDecimal taxaAdicional = encontrarTaxaAdicional(regiao);
@@ -33,26 +34,52 @@ public class CarrinhoServico {
     }
 
     public BigDecimal encontrarDesconto(BigDecimal somaPreco, List<Item> itens) {
-        Map<ItemTipo, Long> itemAgrupadoTipo = itens.stream().collect(Collectors.groupingBy(Item::getTipo, Collectors.counting()));
-        boolean hasDuplicates = itemAgrupadoTipo.values().stream().anyMatch(count -> count > 2);
-        BigDecimal desconto = null;
+        somaPreco = somaPreco.setScale(2, RoundingMode.HALF_EVEN);
+        BigDecimal desconto = BigDecimal.ZERO;
+        System.out.println("A soma do preco é: "+somaPreco);
         if ((somaPreco.compareTo(BigDecimal.ZERO) >= 0) && (somaPreco.compareTo(BigDecimal.valueOf(500)) < 0)) {
-            if (hasDuplicates) {
-                desconto = BigDecimal.valueOf(0.05);
-            } else {
                 desconto = BigDecimal.ZERO;
-            }
         } else if ((somaPreco.compareTo(BigDecimal.valueOf(500)) >= 0) && (somaPreco.compareTo(BigDecimal.valueOf(1000)) < 0)) {
             desconto = BigDecimal.valueOf(0.1);
         } else if ((somaPreco.compareTo(BigDecimal.valueOf(1000)) >= 0)) {
             desconto = BigDecimal.valueOf(0.2);
         }
+        System.out.println("O desconto foi de: "+desconto);
         return desconto;
     }
 
-    public BigDecimal calcularPrecoItensFinal(BigDecimal somaPreco, BigDecimal desconto) {
-        BigDecimal precoItensFinal = aplicarDesconto(somaPreco, desconto);
-        return precoItensFinal;
+    public BigDecimal calcularPrecoItensFinal(BigDecimal somaPreco, BigDecimal desconto, List<Item> itens) {
+        BigDecimal precoItensFinal= BigDecimal.ZERO;
+        if(desconto.equals(BigDecimal.ZERO)){
+            for (ItemTipo tipo : ItemTipo.values()){
+                int j = 0;
+                for(Item item: itens) {
+                    if (item.getTipo().equals(tipo)) {
+                        j++;
+                    }
+                }
+                if(j > 2){
+                    for (Item item2: itens) {
+                        if(item2.getTipo().equals(tipo)){
+                            precoItensFinal = precoItensFinal.add(aplicarDesconto(item2.getPreco(), BigDecimal.valueOf(0.05)));
+                        }
+                    }
+                }
+                else {
+                    for (Item item2: itens) {
+                        if(item2.getTipo().equals(tipo)){
+                            precoItensFinal = precoItensFinal.add(item2.getPreco());
+                        }
+                    }
+                }
+
+            }
+
+        return precoItensFinal.setScale(2, RoundingMode.HALF_EVEN);
+        }
+        else {
+            return aplicarDesconto(somaPreco, desconto).setScale(2, RoundingMode.HALF_EVEN);
+        }
     }
 
     public Regiao encontrarRegiao(Estado e) {
@@ -104,12 +131,12 @@ public class CarrinhoServico {
         switch (regiao) {
             case SUDESTE:
             case NORDESTE:
-                taxaAdicional = BigDecimal.valueOf(0.1);
+                taxaAdicional = BigDecimal.ZERO;
                 break;
             case NORTE:
             case SUL:
             case CENTRO_OESTE:
-                taxaAdicional = BigDecimal.ZERO;
+                taxaAdicional = BigDecimal.valueOf(0.1);
                 break;
         }
         return taxaAdicional;
@@ -117,7 +144,7 @@ public class CarrinhoServico {
 
 
     public BigDecimal somarPeso(List<Item> itens) {
-        BigDecimal somaPeso = itens.stream().map(Item::getPeso).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal somaPeso = itens.stream().map(Item::getPeso).reduce(BigDecimal.ZERO, BigDecimal::add).setScale(1, RoundingMode.HALF_UP);
         return somaPeso;
     }
 
@@ -132,6 +159,8 @@ public class CarrinhoServico {
         } else if (somaPeso.compareTo(BigDecimal.valueOf(100)) >= 0) {
             taxaFrete = BigDecimal.valueOf(1);
         }
+        System.out.println("A soma do peso é"+somaPeso);
+        System.out.println("A taxa do frete é"+taxaFrete);
 
         return taxaFrete;
 
@@ -140,7 +169,7 @@ public class CarrinhoServico {
     public BigDecimal calcularFreteFinal(BigDecimal somaPeso, BigDecimal taxaFrete, BigDecimal taxaFreteAdicional) {
         BigDecimal freteFinalSemAdicional = somaPeso.multiply(taxaFrete);
         BigDecimal freteFinalComAdicional = aplicarAcrescimo(freteFinalSemAdicional, taxaFreteAdicional);
-        return freteFinalComAdicional;
+        return freteFinalComAdicional.setScale(2,RoundingMode.HALF_EVEN);
     }
 
     public BigDecimal aplicarDesconto(BigDecimal valor, BigDecimal desconto) {
